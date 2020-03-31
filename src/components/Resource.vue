@@ -1,6 +1,6 @@
 <template>
     <div class="resource" v-tooltip="this">
-        {{ formatted }}
+        {{ amount }}
         {{ data.name }}
     </div>
 </template>
@@ -13,12 +13,10 @@
         directives: {
             tooltip,
         },
-        props: ["data", "amount"],
+        props: ["data"],
         computed: {
-            formatted () {
-                return +this.amount.toFixed(1) === Math.round(this.amount) ?
-                    Math.round(this.amount) :
-                    this.amount.toFixed(1);
+            amount () {
+                return this.$store.getters["resources/howMuch"](this.data);
             }
         }
     }

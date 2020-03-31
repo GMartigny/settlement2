@@ -8,7 +8,7 @@
             class="action"
             :class="state"
             :style="style"
-            @click="run"
+            @click="start"
             v-tooltip="this"
         >
             <span class="name">{{ data.name }}</span>
@@ -19,7 +19,7 @@
             v-show="showOptions"
         >
             <Action
-                v-for="(sub, index) in data.choices" :key="index"
+                v-for="sub in data.choices" :key="sub.name"
                 :data="sub"
             />
         </div>
@@ -28,22 +28,18 @@
 
 <script>
     import tooltip from "../tooltip-directive";
+    import { wait, cancel } from "../timer";
 
     export default {
         name: "Action",
         directives: {
             tooltip,
         },
-        props: ["available", "data"],
+        props: ["data"],
         data () {
             return {
-                state: {
-                    multiple: Boolean(this.data.choices),
-                    running: false,
-                    disabled: this.isDisabled(),
-                },
+                isRunning: false,
                 showOptions: false,
-                timeout: null,
             };
         },
         computed: {
@@ -52,29 +48,58 @@
                     animationDuration: `${this.data.time}ms`,
                 };
             },
+            state () {
+                return {
+                    multiple: Boolean(this.data.choices),
+                    running: this.isRunning,
+                    disabled: this.isDisabled(),
+                };
+            },
         },
         methods: {
-            run () {
-                console.log(this.data.name);
-                // this.$emit("action/run", this.data);
-                const earn = this.data.effect && this.data.effect();
-                if (earn) {
-                    earn.forEach(([amount, resource]) => {
-                        this.$store.dispatch("resources/addResource", {
-                            amount,
-                            resource,
-                        });
-                    });
+            start () {
+                if (this.state.disabled) {
+                    return;
                 }
+
+                const consume = this.data.needs && this.data.needs(this);
+                if (consume) {
+                    consume.forEach(([amount, resource]) => this.$store.dispatch("resources/consumeResource", {
+                        resource,
+                        amount,
+                    }));
+                }
+
+                this.$emit("start", this.data);
+                this.isRunning = wait(this.end, this.data.time);
+            },
+            end () {
+                const earn = this.data.effect && this.data.effect(this);
+                if (earn) {
+                    earn.forEach(([amount, resource]) => this.$store.dispatch("resources/addResource", {
+                        resource,
+                        amount,
+                    }));
+                }
+
+                this.$emit("end", this.data);
+                this.isRunning = false;
             },
             isDisabled () {
-                const { energy, needs } = this.data;
-                if (energy && energy > this.available) {
+                // The person is already doing something
+                if (this.$parent.isBusy) {
                     return true;
                 }
 
+                // The person don't have enough energy
+                const { energy, needs } = this.data;
+                if (energy && energy > this.$parent.data.energy) {
+                    return true;
+                }
+
+                // Need don't match
                 if (needs) {
-                    return Boolean(needs().find(([amount, data]) => {
+                    return Boolean(needs(this).find(([amount, data]) => {
                         const has = this.$store.getters["resources/howMuch"](data);
                         return has < amount;
                     }));
@@ -83,10 +108,18 @@
                 return false;
             }
         },
+        destroyed () {
+            cancel(this.isRunning);
+        },
     }
 </script>
 
 <style scoped lang="less">
+    // Stop animation when game is paused
+    .isPaused .action {
+        animation-play-state: paused;
+    }
+
     .action-wrapper {
         position: relative;
         display: inline-block;
@@ -122,12 +155,33 @@
             &.running {
                 color: #999;
                 box-shadow: none;
+
+                &:after {
+                    content: "";
+                    position: absolute;
+                    height: 100%;
+                    top: 0;
+                    left: 0;
+                    background: rgba(255, 255, 255, .7);
+                    animation: run linear 1;
+                    animation-duration: inherit;
+                    animation-play-state: inherit;
+
+                    @keyframes run {
+                        from {
+                            width: 100%;
+                        }
+                        to {
+                            width: 0;
+                        }
+                    }
+                }
             }
 
             &.disabled {
                 cursor: initial;
 
-                &:after {
+                &:before {
                     content: "";
                     position: absolute;
                     width: 100%;

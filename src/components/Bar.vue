@@ -1,6 +1,7 @@
 <template>
     <div
         class="bar"
+        :class="state"
         :style="style"
         v-tooltip="this"
     />
@@ -22,6 +23,11 @@
                     backgroundColor: this.data.color,
                 };
             },
+            state () {
+                return {
+                    warning: this.percentage < 0.2,
+                };
+            }
         },
     };
 </script>
@@ -40,6 +46,19 @@
             background-color: inherit;
             opacity: .2;
             border-radius: 99px;
+        }
+
+        &.warning {
+            animation: blink ease infinite 1s alternate;
+
+            @keyframes blink {
+                from {
+                    opacity: 1;
+                }
+                to {
+                    opacity: 0.2;
+                }
+            }
         }
     }
 </style>

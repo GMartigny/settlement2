@@ -1,15 +1,16 @@
 <template>
     <div class="person">
-        <div class="name">{{ person.name }}</div>
+        <div class="name">{{ data.name }}</div>
         <div class="bars">
-            <Bar :data="special.health" :percentage="person.health" />
-            <Bar :data="special.energy" :percentage="person.energy" />
+            <Bar :data="special.health" :percentage="data.health" />
+            <Bar :data="special.energy" :percentage="data.energy" />
         </div>
         <div>
             <Action
-                v-for="(data, index) in person.actions" :key="index"
-                :available="person.energy"
-                :data="data"
+                v-for="action in data.actions" :key="action.name"
+                :data="action"
+                @start="startAction"
+                @end="endAction"
             />
         </div>
     </div>
@@ -22,16 +23,57 @@
 
     export default {
         name: "Person",
-        props: ["person"],
+        props: ["data"],
         data () {
             return {
                 special,
+                isReady: false,
+                isBusy: false,
             };
         },
         components: {
             Bar,
             Action,
-        }
+        },
+        methods: {
+            startAction ({ name, energy }) {
+                if (energy) {
+                    this.updateEnergy(-energy);
+                }
+                this.isBusy = name;
+            },
+            endAction ({ unlock, lock }) {
+                this.isBusy = false;
+
+                const unlocked = unlock && unlock(this);
+                if (unlocked) {
+                    unlocked.forEach(action => this.$store.dispatch("person/addAction", {
+                        person: this.data,
+                        action,
+                    }));
+                }
+
+                const locked = lock && lock(this);
+                if (locked) {
+                    locked.forEach(action => this.$store.dispatch("person/removeAction", {
+                        person: this.data,
+                        action,
+                    }));
+                }
+            },
+            updateEnergy (amount) {
+                this.$store.dispatch("person/updateEnergy", {
+                    person: this.data,
+                    amount,
+                });
+            },
+            updateHealth (amount) {
+                this.$store.dispatch("person/updateHealth", {
+                    person: this.data,
+                    amount,
+                });
+            },
+        },
     };
 </script>
 

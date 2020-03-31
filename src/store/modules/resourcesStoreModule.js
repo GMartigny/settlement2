@@ -1,55 +1,59 @@
-import { resources } from "../../data";
+import { getIndexByName, getByIndex } from "./utils";
 
 export default {
     namespaced: true,
     state: {
-        list: [
-            {
-                type: resources.water,
-                amount: 10,
-            },
-            {
-                type: resources.nuts,
-                amount: 2,
-            },
-            {
-                type: resources.component,
-                amount: 1,
-            },
-        ],
+        list: [],
+    },
+    getters: {
+        available ({ list }) {
+            return list;
+        },
+        howMuch: ({ list }, { byName }) => ({ name }) => {
+            const index = byName(name);
+            if (index >= 0) {
+                const { amount } = list[index];
+                return +amount.toFixed(1);
+            }
+            return 0;
+        },
+        byName: ({ list }) => getIndexByName(list),
+        byIndex: ({ list }) => getByIndex(list),
     },
     mutations: {
         push ({ list }, resource) {
             list.push(resource);
         },
-        increment ({ list }, { index, amount }) {
-            list[index].amount += amount;
+        setAmount ({ list }, { index, amount }) {
+            list[index].amount = Math.max(amount, 0);
         },
     },
     actions: {
-        addResource ({ state, commit }, { amount, resource }) {
-            const index = state.list.findIndex(({ type }) => resource.name === type.name);
+        addResource ({ getters, commit }, { resource, amount }) {
+            const index = getters.byName(resource.name);
             if (index < 0) {
                 commit("push", {
-                    type: resource,
+                    ...resource,
                     amount,
                 });
             }
-            else {
-                commit("increment", {
+            else if (amount > 0) {
+                const target = getters.byIndex(index);
+                commit("setAmount", {
                     index,
-                    amount,
+                    amount: target.amount + amount,
                 });
             }
         },
-    },
-    getters: {
-        available ({ list }) {
-            return list.filter(({ amount }) => amount > 0);
-        },
-        howMuch: ({ list }) => ({ name }) => {
-            const resource = list.find(({ type }) => type.name === name);
-            return resource ? resource.amount : 0;
+        consumeResource ({ getters, commit }, { resource, amount }) {
+            const index = getters.byName(resource.name);
+            if (index >= 0) {
+                const target = getters.byIndex(index);
+                commit("setAmount", {
+                    index,
+                    amount: target.amount - amount,
+                });
+            }
         },
     },
 };
