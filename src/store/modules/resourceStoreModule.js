@@ -1,4 +1,4 @@
-import { getIndexByName, getByIndex } from "./utils";
+import { commonGetters, commonMutations, mutations } from "./commons";
 
 export default {
     namespaced: true,
@@ -6,9 +6,7 @@ export default {
         list: [],
     },
     getters: {
-        available ({ list }) {
-            return list;
-        },
+        ...commonGetters,
         howMuch: ({ list }, { byName }) => ({ name }) => {
             const index = byName(name);
             if (index >= 0) {
@@ -17,24 +15,22 @@ export default {
             }
             return 0;
         },
-        byName: ({ list }) => getIndexByName(list),
-        byIndex: ({ list }) => getByIndex(list),
     },
     mutations: {
-        push ({ list }, resource) {
-            list.push(resource);
-        },
+        ...commonMutations,
         setAmount ({ list }, { index, amount }) {
             list[index].amount = Math.max(amount, 0);
         },
     },
     actions: {
-        addResource ({ getters, commit }, { resource, amount }) {
+        add ({ getters, commit }, { resource, amount }) {
             const index = getters.byName(resource.name);
             if (index < 0) {
-                commit("push", {
-                    ...resource,
-                    amount,
+                commit(mutations.push, {
+                    item: {
+                        ...resource,
+                        amount,
+                    },
                 });
             }
             else if (amount > 0) {
@@ -45,7 +41,7 @@ export default {
                 });
             }
         },
-        consumeResource ({ getters, commit }, { resource, amount }) {
+        consume ({ getters, commit }, { resource, amount }) {
             const index = getters.byName(resource.name);
             if (index >= 0) {
                 const target = getters.byIndex(index);

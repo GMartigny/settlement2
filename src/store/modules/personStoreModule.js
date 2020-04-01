@@ -1,28 +1,16 @@
-import { actions } from "../../data";
-import { getIndexByName, getByIndex } from "./utils";
+import { getIndexByName } from "./utils";
+import { commonGetters, commonMutations, mutations } from "./commons";
 
 export default {
     namespaced: true,
     state: {
-        list: [
-            {
-                name: "Joe",
-                health: 0,
-                energy: 0,
-                actions: [
-                    actions.wakeUp,
-                ],
-            },
-        ],
+        list: [],
     },
     getters: {
-        available ({ list }) {
-            return list;
-        },
-        byName: ({ list }) => getIndexByName(list),
-        byIndex: ({ list }) => getByIndex(list),
+        ...commonGetters,
     },
     mutations: {
+        ...commonMutations,
         setEnergy ({ list }, { index, value }) {
             list[index].energy = Math.min(value, 1);
         },
@@ -37,11 +25,17 @@ export default {
             const actionIndex = getIndexByName(person.actions)(action.name);
             person.actions.splice(actionIndex, 1);
         },
-        remove ({ list }, { index }) {
-            list.splice(index, 1);
-        },
     },
     actions: {
+        add ({ rootGetters, commit }, { person }) {
+            const actions = [...rootGetters["action/list"]];
+            commit(mutations.push, {
+                item: {
+                    ...person,
+                    actions,
+                },
+            });
+        },
         updateEnergy ({ getters, dispatch, commit }, { person, amount }) {
             const index = getters.byName(person.name);
             if (index >= 0) {
@@ -51,8 +45,10 @@ export default {
                     value: target.energy + amount,
                 });
 
+                // Without energy, hit health
                 if (target.energy < 0) {
                     const healthReduction = target.energy;
+                    // Order matter here, updateHealth can remove the person
                     commit("setEnergy", {
                         index,
                         value: 0,
@@ -74,7 +70,7 @@ export default {
                 });
 
                 if (target.health < 0) {
-                    commit("remove", {
+                    commit(mutations.remove, {
                         index,
                     });
                 }

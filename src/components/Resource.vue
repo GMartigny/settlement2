@@ -16,7 +16,7 @@
         props: ["data"],
         computed: {
             amount () {
-                return this.$store.getters["resources/howMuch"](this.data);
+                return this.$store.getters["resource/howMuch"](this.data);
             }
         }
     }

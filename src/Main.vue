@@ -8,13 +8,13 @@
                 />
             </div>
         </transition>
-        <div class="persons">
-            <Person
-                v-for="person in persons" :key="person.name"
-                :data="person"
-                ref="persons"
-            />
-        </div>
+            <div class="persons">
+                <Person
+                    v-for="person in persons" :key="person.name"
+                    :data="person"
+                    ref="persons"
+                />
+            </div>
         <Tooltip ref="tooltip" />
     </main>
 </template>
@@ -23,8 +23,8 @@
     import Resources from "./components/Resource.vue";
     import Person from "./components/Person.vue";
     import Tooltip from "./components/Tooltip.vue";
-    import { special, actions } from "./data";
-    import { pauseAll, restartAll } from "./timer";
+    import { specials, actions, buildings } from "./data";
+    import { wait, pauseAll, restartAll } from "./timer";
 
     export default {
         data () {
@@ -39,10 +39,10 @@
                 };
             },
             resources () {
-                return this.$store.getters["resources/available"];
+                return this.$store.getters["resource/list"];
             },
             persons () {
-                return this.$store.getters["person/available"];
+                return this.$store.getters["person/list"];
             }
         },
         components: {
@@ -68,17 +68,27 @@
             },
             updateResources (tick) {
                 // Persons resource consumption
-                const needs = special.person.needs();
+                const needs = specials.person.needs();
                 needs.forEach(([amount, resource]) => {
-                    this.$store.dispatch("resources/consumeResource", {
-                        amount: amount * this.$refs.persons.length * tick,
-                        resource,
-                    });
+                    // Runs out, hit person's energy instead
+                    if (this.$store.getters["resource/howMuch"](resource) === 0) {
+                        this.$refs.persons.forEach((person) => {
+                            if (person.isReady) {
+                                person.updateEnergy(-amount * tick);
+                            }
+                        });
+                    }
+                    else {
+                        this.$store.dispatch("resource/consume", {
+                            amount: amount * this.persons.length * tick,
+                            resource,
+                        });
+                    }
                 });
             },
             updatePersons (tick) {
                 // Energy degradation
-                const { energyDegradation } = special.person;
+                const { energyDegradation } = specials.person;
                 this.$refs.persons.forEach((person) => {
                     if (person.isReady && person.isBusy !== actions.sleep.name) {
                         person.updateEnergy(-energyDegradation * tick);
@@ -96,12 +106,25 @@
             },
         },
         created () {
-            this.update(0);
             window.addEventListener("keypress", ({ code }) => {
                 if (code === "Space") {
                     this.togglePause();
                 }
             });
+
+            this.$store.dispatch("building/add", {
+                building: buildings.wreckage,
+            });
+            wait(() => {
+                this.$store.dispatch("person/add", {
+                    person: {
+                        name: "Joe",
+                        health: 0,
+                        energy: 0,
+                    }
+                });
+                requestAnimationFrame(this.update);
+            }, 1000);
         },
     };
 </script>
@@ -136,7 +159,7 @@
             &.slide-down-enter {
                 // FIXME: can do better (fixed value)
                 margin-bottom: -50px;
-                transform: translate(0, -50px);
+                transform: translate3d(0, -50px, 0);
             }
         }
 

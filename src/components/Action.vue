@@ -64,7 +64,7 @@
 
                 const consume = this.data.needs && this.data.needs(this);
                 if (consume) {
-                    consume.forEach(([amount, resource]) => this.$store.dispatch("resources/consumeResource", {
+                    consume.forEach(([amount, resource]) => this.$store.dispatch("resource/consume", {
                         resource,
                         amount,
                     }));
@@ -76,9 +76,16 @@
             end () {
                 const earn = this.data.effect && this.data.effect(this);
                 if (earn) {
-                    earn.forEach(([amount, resource]) => this.$store.dispatch("resources/addResource", {
+                    earn.forEach(([amount, resource]) => this.$store.dispatch("resource/add", {
                         resource,
                         amount,
+                    }));
+                }
+
+                const build = this.data.build && this.data.build(this);
+                if (build) {
+                    build.forEach(building => this.$store.dispatch("building/add", {
+                        building,
                     }));
                 }
 
@@ -100,7 +107,7 @@
                 // Need don't match
                 if (needs) {
                     return Boolean(needs(this).find(([amount, data]) => {
-                        const has = this.$store.getters["resources/howMuch"](data);
+                        const has = this.$store.getters["resource/howMuch"](data);
                         return has < amount;
                     }));
                 }

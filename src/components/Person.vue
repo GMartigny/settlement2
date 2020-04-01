@@ -1,32 +1,34 @@
 <template>
-    <div class="person">
-        <div class="name">{{ data.name }}</div>
-        <div class="bars">
-            <Bar :data="special.health" :percentage="data.health" />
-            <Bar :data="special.energy" :percentage="data.energy" />
+    <transition appear name="slide-in">
+        <div class="person">
+            <div class="name">{{ data.name }}</div>
+            <div class="bars">
+                <Bar :data="specials.health" :percentage="data.health" />
+                <Bar :data="specials.energy" :percentage="data.energy" />
+            </div>
+            <div>
+                <Action
+                    v-for="action in data.actions" :key="action.name"
+                    :data="action"
+                    @start="startAction"
+                    @end="endAction"
+                />
+            </div>
         </div>
-        <div>
-            <Action
-                v-for="action in data.actions" :key="action.name"
-                :data="action"
-                @start="startAction"
-                @end="endAction"
-            />
-        </div>
-    </div>
+    </transition>
 </template>
 
 <script>
     import Action from "./Action.vue";
     import Bar from "./Bar.vue";
-    import { special } from "../data";
+    import { specials } from "../data";
 
     export default {
         name: "Person",
         props: ["data"],
         data () {
             return {
-                special,
+                specials,
                 isReady: false,
                 isBusy: false,
             };
@@ -81,6 +83,11 @@
     .person {
         padding: 1em;
         background: rgba(0, 0, 0, .6);
+        transition: transform ease-out .5s;
+
+        &.slide-in-enter, &.slide-in-leave-to {
+            transform: translate3d(-100%, 0, 0);
+        }
 
         .name {
             padding-bottom: 1em;

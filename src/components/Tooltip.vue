@@ -18,7 +18,7 @@
                 :class="{ hasEnough: hasEnough(amount, data) }"
             >
                 <span v-if="!hasEnough(amount, data)">
-                    {{ $store.getters["resources/howMuch"](data) }} /
+                    {{ $store.getters["resource/howMuch"](data) }} /
                 </span>{{ amount }}
                 {{ data.name }}
             </li>
@@ -62,7 +62,7 @@
         },
         methods: {
             hasEnough (amount, data) {
-                return amount <= this.$store.getters["resources/howMuch"](data);
+                return amount <= this.$store.getters["resource/howMuch"](data);
             }
         }
     };

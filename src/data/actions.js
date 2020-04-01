@@ -1,54 +1,7 @@
-import { random } from "./math";
-
-const time = x => x * (1000 / 60);
-
-const resources = {
-    water: {
-        name: "Water",
-        description: "Don't get dehydrated !",
-    },
-    food: {
-        name: "Food",
-        description: "Yumm",
-    },
-    nuts: {
-        name: "Nuts",
-        description: "",
-    },
-    component: {
-        name: "Component",
-        description: "Simple composition of random part.",
-        needs: () => [
-            [2, resources.nuts],
-        ],
-    },
-    engine: {
-        name: "Engine",
-        description: "Vroom vroom",
-        needs: () => [
-            [2, resources.component],
-        ],
-    },
-};
-
-const special = {
-    health: {
-        name: "Health",
-        description: "Useful not die",
-        color: "var(--health)",
-    },
-    energy: {
-        name: "Energy",
-        description: "Don't get tired",
-        color: "var(--energy)",
-    },
-    person: {
-        energyDegradation: 0.0002,
-        needs: () => [
-            [0.001, resources.water],
-        ],
-    },
-};
+import { random } from "../math";
+import { time } from "./utils";
+import buildings from "./buildings";
+import resources from "./resources";
 
 const actions = {
     wakeUp: {
@@ -76,7 +29,7 @@ const actions = {
             actions.lookAround,
         ],
         effect: () => [
-            [8, resources.water],
+            [10, resources.water],
             [7, resources.food],
             [1, resources.component],
         ],
@@ -86,6 +39,9 @@ const actions = {
         description: "Prepare a small camp right here.",
         energy: 0.2,
         time: time(200),
+        build: () => [
+            buildings.forum,
+        ],
         unlock: () => [
             actions.sleep,
             actions.gather,
@@ -128,8 +84,4 @@ const actions = {
     },
 };
 
-export {
-    special,
-    resources,
-    actions,
-};
+export default actions;
