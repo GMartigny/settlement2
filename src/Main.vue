@@ -8,13 +8,19 @@
                 />
             </div>
         </transition>
-            <div class="persons">
-                <Person
-                    v-for="person in persons" :key="person.name"
-                    :data="person"
-                    ref="persons"
-                />
-            </div>
+        <div class="persons">
+            <Person
+                v-for="person in persons" :key="person.name"
+                :data="person"
+                ref="persons"
+            />
+        </div>
+        <button
+            class="clear-save"
+            @click="clearSave"
+        >
+            Clear save
+        </button>
         <Tooltip ref="tooltip" />
     </main>
 </template>
@@ -105,6 +111,9 @@
                 }
                 this.isPaused = !this.isPaused;
             },
+            clearSave () {
+                this.$store.dispatch("clear");
+            }
         },
         created () {
             window.addEventListener("keypress", ({ code }) => {
@@ -170,6 +179,12 @@
 
         .persons {
             padding: 1em;
+        }
+
+        .clear-save {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
         }
     }
 </style>
