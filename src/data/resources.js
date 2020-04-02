@@ -15,14 +15,14 @@ const resources = {
         name: "Component",
         description: "Simple composition of random part.",
         needs: () => [
-            [2, resources.nuts],
+            [2, resources.nuts.key],
         ],
     },
     engine: {
         name: "Engine",
         description: "Vroom vroom",
         needs: () => [
-            [2, resources.component],
+            [2, resources.component.key],
         ],
     },
 };

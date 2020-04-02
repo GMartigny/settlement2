@@ -1,10 +1,8 @@
-import { getByIndex, getIndexByName } from "./utils";
-
 const commonGetters = {
     list: ({ list }) => list,
-    byName: ({ list }) => getIndexByName(list),
-    byIndex: ({ list }) => getByIndex(list),
-    exists: (_, { byName }) => ({ name }) => byName(name) >= 0,
+    indexOf: ({ list }) => key => list.indexOf(key),
+    byIndex: ({ list }) => index => list[index],
+    exists: ({ list }) => key => list.includes(key),
 };
 
 const mutations = {

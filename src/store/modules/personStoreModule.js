@@ -1,4 +1,3 @@
-import { getIndexByName } from "./utils";
 import { commonGetters, commonMutations, mutations } from "./commons";
 
 export default {
@@ -8,6 +7,7 @@ export default {
     },
     getters: {
         ...commonGetters,
+        byName: ({ list }) => name => list.findIndex(person => person.name === name),
     },
     mutations: {
         ...commonMutations,
@@ -20,10 +20,8 @@ export default {
         pushAction ({ list }, { index, action }) {
             list[index].actions.push(action);
         },
-        removeAction ({ list }, { index, action }) {
-            const person = list[index];
-            const actionIndex = getIndexByName(person.actions)(action.name);
-            person.actions.splice(actionIndex, 1);
+        removeAction ({ list }, { index, actionIndex }) {
+            list[index].actions.splice(actionIndex, 1);
         },
     },
     actions: {
@@ -80,7 +78,7 @@ export default {
             const index = getters.byName(person.name);
             if (index >= 0) {
                 const target = getters.byIndex(index);
-                const hasAction = getIndexByName(target.actions)(action.name) >= 0;
+                const hasAction = target.actions.includes(action);
                 if (!hasAction) {
                     commit("pushAction", {
                         index,
@@ -90,12 +88,13 @@ export default {
             }
         },
         removeAction ({ getters, commit }, { person, action }) {
-            // FIXME: code repetition to check person existence (monad ?)
             const index = getters.byName(person.name);
             if (index >= 0) {
+                const target = getters.byIndex(index);
+                const actionIndex = target.actions.indexOf(action);
                 commit("removeAction", {
                     index,
-                    action,
+                    actionIndex,
                 });
             }
         },

@@ -29,13 +29,13 @@
 <script>
     import tooltip from "../tooltip-directive";
     import { wait, cancel } from "../timer";
+    import { actions } from "../data";
 
     export default {
         name: "Action",
         directives: {
             tooltip,
         },
-        props: ["data"],
         data () {
             return {
                 isRunning: false,
@@ -43,6 +43,9 @@
             };
         },
         computed: {
+            data () {
+                return actions[this.$vnode.key];
+            },
             style () {
                 return {
                     animationDuration: `${this.data.time}ms`,
@@ -71,7 +74,12 @@
                 }
 
                 this.$emit("start", this.data);
-                this.isRunning = wait(this.end, this.data.time);
+                if (this.data.time) {
+                    this.isRunning = wait(this.end, this.data.time);
+                }
+                else {
+                    this.end();
+                }
             },
             end () {
                 const earn = this.data.effect && this.data.effect(this);

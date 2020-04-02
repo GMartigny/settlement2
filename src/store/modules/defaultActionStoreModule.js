@@ -21,7 +21,7 @@ export default {
             }
         },
         removeAction ({ getters, commit }, { action }) {
-            const index = getters.byName(action.name);
+            const index = getters.indexOf(action);
             if (index >= 0) {
                 commit("remove", {
                     index,

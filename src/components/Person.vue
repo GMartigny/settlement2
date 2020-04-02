@@ -8,8 +8,7 @@
             </div>
             <div>
                 <Action
-                    v-for="action in data.actions" :key="action.name"
-                    :data="action"
+                    v-for="action in data.actions" :key="action"
                     @start="startAction"
                     @end="endAction"
                 />
@@ -29,7 +28,6 @@
         data () {
             return {
                 specials,
-                isReady: false,
                 isBusy: false,
             };
         },

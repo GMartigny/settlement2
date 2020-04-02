@@ -1,10 +1,10 @@
 <template>
     <main :class="state">
         <transition name="slide-down">
-            <div class="resources" v-show="resources.length">
+            <div class="resources" v-show="Object.keys(resources).length">
                 <Resources
-                    v-for="resource in resources" :key="resource.name"
-                    :data="resource"
+                    v-for="(amount, resource) in resources" :key="resource"
+                    :amount="amount"
                 />
             </div>
         </transition>
@@ -51,6 +51,9 @@
             Tooltip,
         },
         methods: {
+            start () {
+                requestAnimationFrame(this.update);
+            },
             update (previousTime) {
                 requestAnimationFrame((time) => {
                     // Compute time elapsed since last tick
@@ -73,14 +76,12 @@
                     // Runs out, hit person's energy instead
                     if (this.$store.getters["resource/howMuch"](resource) === 0) {
                         this.$refs.persons.forEach((person) => {
-                            if (person.isReady) {
-                                person.updateEnergy(-amount * tick);
-                            }
+                            person.updateEnergy(-amount * tick);
                         });
                     }
                     else {
                         this.$store.dispatch("resource/consume", {
-                            amount: amount * this.persons.length * tick,
+                            amount: amount * this.$refs.persons.length * tick,
                             resource,
                         });
                     }
@@ -90,7 +91,7 @@
                 // Energy degradation
                 const { energyDegradation } = specials.person;
                 this.$refs.persons.forEach((person) => {
-                    if (person.isReady && person.isBusy !== actions.sleep.name) {
+                    if (person.isBusy !== actions.sleep.name) {
                         person.updateEnergy(-energyDegradation * tick);
                     }
                 });
@@ -112,19 +113,23 @@
                 }
             });
 
-            this.$store.dispatch("building/add", {
-                building: buildings.wreckage,
-            });
-            wait(() => {
-                this.$store.dispatch("person/add", {
-                    person: {
-                        name: "Joe",
-                        health: 0,
-                        energy: 0,
-                    }
+            if (!this.persons.length) {
+                this.$store.dispatch("building/add", {
+                    building: buildings.wreckage,
                 });
-                requestAnimationFrame(this.update);
-            }, 1000);
+                wait(() => {
+                    this.$store.dispatch("person/add", {
+                        person: {
+                            name: "Joe",
+                            health: 0,
+                            energy: 0,
+                        }
+                    });
+                }, 1000);
+            }
+            else {
+                this.start();
+            }
         },
     };
 </script>

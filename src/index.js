@@ -13,5 +13,8 @@ const app = new Vue({
         Main,
     },
     template: "<Main />",
+    beforeCreate () {
+        this.$store.dispatch("initialize");
+    },
 });
 app.$mount(container);

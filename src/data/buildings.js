@@ -4,17 +4,17 @@ const buildings = {
     wreckage: {
         name: "Wreckage",
         unlock: () => [
-            actions.wakeUp,
+            actions.wakeUp.key,
         ],
     },
     forum: {
         name: "Forum",
         upgrade: () => [
-            buildings.wreckage,
+            buildings.wreckage.key,
         ],
         unlock: () => [
-            actions.sleep,
-            actions.gather,
+            actions.sleep.key,
+            actions.gather.key,
         ],
     },
 };

@@ -14,8 +14,8 @@ const specials = {
     person: {
         energyDegradation: 0.0002,
         needs: () => [
-            [0.001, resources.water],
-            [0.0005, resources.food],
+            [0.001, resources.water.key],
+            [0.0005, resources.food.key],
         ],
     },
 };

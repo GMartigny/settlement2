@@ -1,53 +1,53 @@
-import { commonGetters, commonMutations, mutations } from "./commons";
+import { mutations } from "./commons";
 
 export default {
     namespaced: true,
     state: {
-        list: [],
+        list: {},
     },
     getters: {
-        ...commonGetters,
-        howMuch: ({ list }, { byName }) => ({ name }) => {
-            const index = byName(name);
-            if (index >= 0) {
-                const { amount } = list[index];
-                return +amount.toFixed(1);
+        list: ({ list }) => list,
+        exists: ({ list }) => resources => Object.prototype.hasOwnProperty.call(list, resources),
+        howMuch: ({ list }) => (resource) => {
+            if (list[resource]) {
+                return +list[resource].toFixed(1);
             }
             return 0;
         },
     },
     mutations: {
-        ...commonMutations,
-        setAmount ({ list }, { index, amount }) {
-            list[index].amount = Math.max(amount, 0);
+        [mutations.push] (state, { resource, amount }) {
+            state.list = {
+                ...state.list,
+                [resource]: amount,
+            };
+        },
+        changeAmount ({ list }, { resource, amount }) {
+            list[resource] += Math.max(amount, -list[resource]);
         },
     },
     actions: {
         add ({ getters, commit }, { resource, amount }) {
-            const index = getters.byName(resource.name);
-            if (index < 0) {
-                commit(mutations.push, {
-                    item: {
-                        ...resource,
-                        amount,
-                    },
+            const exists = getters.exists(resource);
+            if (exists) {
+                commit("changeAmount", {
+                    resource,
+                    amount,
                 });
             }
             else if (amount > 0) {
-                const target = getters.byIndex(index);
-                commit("setAmount", {
-                    index,
-                    amount: target.amount + amount,
+                commit(mutations.push, {
+                    resource,
+                    amount,
                 });
             }
         },
         consume ({ getters, commit }, { resource, amount }) {
-            const index = getters.byName(resource.name);
-            if (index >= 0) {
-                const target = getters.byIndex(index);
-                commit("setAmount", {
-                    index,
-                    amount: target.amount - amount,
+            const exists = getters.exists(resource);
+            if (exists) {
+                commit("changeAmount", {
+                    resource,
+                    amount: -amount,
                 });
             }
         },

@@ -8,10 +8,10 @@ const actions = {
         name: "Wake up",
         description: "Awake from your slumber.",
         unlock: () => [
-            actions.lookAround,
+            actions.lookAround.key,
         ],
         lock: () => [
-            actions.wakeUp,
+            actions.wakeUp.key,
         ],
         effect ({ $parent }) {
             $parent.updateEnergy(0.4);
@@ -23,15 +23,15 @@ const actions = {
         description: "Take a look at your surrounding.",
         time: time(60),
         unlock: () => [
-            actions.settle,
+            actions.settle.key,
         ],
         lock: () => [
-            actions.lookAround,
+            actions.lookAround.key,
         ],
         effect: () => [
-            [10, resources.water],
-            [7, resources.food],
-            [1, resources.component],
+            [10, resources.water.key],
+            [7, resources.food.key],
+            [1, resources.component.key],
         ],
     },
     settle: {
@@ -40,17 +40,17 @@ const actions = {
         energy: 0.2,
         time: time(200),
         build: () => [
-            buildings.forum,
+            buildings.forum.key,
         ],
         unlock: () => [
-            actions.sleep,
-            actions.gather,
+            actions.sleep.key,
+            actions.gather.key,
         ],
         lock: () => [
-            actions.settle,
+            actions.settle.key,
         ],
         effect ({ $parent }) {
-            $parent.isReady = true;
+            $parent.$parent.start();
         },
     },
     sleep: {
@@ -68,8 +68,8 @@ const actions = {
         energy: 0.6,
         time: time(99),
         effect: () => [
-            [random(2), resources.water],
-            [random(2), resources.food],
+            [random(2), resources.water.key],
+            [random(2), resources.food.key],
         ],
     },
     craft: {
@@ -78,8 +78,8 @@ const actions = {
         energy: 0.1,
         time: time(150),
         choices: [
-            resources.component,
-            resources.engine,
+            resources.component.key,
+            resources.engine.key,
         ],
     },
 };

@@ -29,7 +29,7 @@ export default {
             const upgrade = building.upgrade && building.upgrade();
             if (upgrade) {
                 upgrade.forEach((removed) => {
-                    const index = getters.byName(removed);
+                    const index = getters.indexOf(removed);
                     if (index >= 0) {
                         commit(mutations.remove, {
                             index,
