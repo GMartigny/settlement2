@@ -58,10 +58,11 @@
         },
         methods: {
             start () {
-                requestAnimationFrame(this.update);
+                this.update(performance.now());
             },
             update (previousTime) {
-                requestAnimationFrame((time) => {
+                setTimeout(() => {
+                    const time = performance.now();
                     // Compute time elapsed since last tick
                     const passed = time - previousTime;
                     const tickLength = 1000 / 60;
@@ -69,11 +70,11 @@
                     const passedOn = (ticks % 1) * tickLength;
                     if (ticks > 0 && !this.isPaused) {
                         const todo = Math.floor(ticks);
-                        this.updatePersons(todo);
                         this.updateResources(todo);
+                        this.updatePersons(todo);
                     }
                     this.update(time - passedOn);
-                });
+                }, 400);
             },
             updateResources (tick) {
                 // Persons resource consumption
@@ -96,11 +97,16 @@
             updatePersons (tick) {
                 // Energy degradation
                 const { energyDegradation } = specials.person;
-                this.$refs.persons.forEach((person) => {
-                    if (person.isBusy !== actions.sleep.name) {
-                        person.updateEnergy(-energyDegradation * tick);
-                    }
-                });
+                if (this.$refs.persons.length) {
+                    this.$refs.persons.forEach((person) => {
+                        if (person.isBusy !== actions.sleep.name) {
+                            person.updateEnergy(-energyDegradation * tick);
+                        }
+                    });
+                }
+                else {
+                    this.$store.dispatch("clear");
+                }
             },
             togglePause () {
                 if (this.isPaused) {
@@ -113,11 +119,12 @@
             },
             clearSave () {
                 this.$store.dispatch("clear");
+                location.reload();
             }
         },
         created () {
             window.addEventListener("keypress", ({ code }) => {
-                if (code === "Space") {
+                if (code === "KeyP") {
                     this.togglePause();
                 }
             });

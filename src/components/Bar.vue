@@ -37,6 +37,7 @@
         @height: 6px;
         height: @height;
         border-radius: 99px;
+        transition: width ease .4s;
 
         &:before {
             content: "";

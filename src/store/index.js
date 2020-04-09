@@ -41,8 +41,6 @@ const store = new Vuex.Store({
             // eslint-disable-next-line no-use-before-define
             unsubscriber();
             localStorage.clear();
-            // eslint-disable-next-line no-restricted-globals
-            location.reload();
         },
     },
 });

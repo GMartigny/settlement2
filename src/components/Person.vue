@@ -1,6 +1,6 @@
 <template>
     <transition appear name="slide-in">
-        <div class="person">
+        <div class="person" tabindex="1" @keypress="press">
             <div class="name">{{ data.name }}</div>
             <div class="bars">
                 <Bar :data="specials.health" :percentage="data.health" />
@@ -11,6 +11,7 @@
                     v-for="action in data.actions" :key="action"
                     @start="startAction"
                     @end="endAction"
+                    ref="actions"
                 />
             </div>
         </div>
@@ -36,6 +37,14 @@
             Action,
         },
         methods: {
+            press ({ code }) {
+                if (code.startsWith("Digit")) {
+                    const nb = +code.slice(5) - 1;
+                    if (this.$refs.actions[nb]) {
+                        this.$refs.actions[nb].start()
+                    }
+                }
+            },
             startAction ({ name, energy }) {
                 if (energy) {
                     this.updateEnergy(-energy);
@@ -82,6 +91,10 @@
         padding: 1em;
         background: rgba(0, 0, 0, .6);
         transition: transform ease-out .5s;
+
+        &:focus-within, &:focus {
+            outline: 1px solid #fff;
+        }
 
         &.slide-in-enter, &.slide-in-leave-to {
             transform: translate3d(-100%, 0, 0);

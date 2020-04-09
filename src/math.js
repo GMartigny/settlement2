@@ -1,25 +1,64 @@
 const { sin, floor } = Math;
 
+/**
+ * Valid mathematical modulo operation
+ * @param {Number} value - Value to apply modulo on
+ * @param {Number} divisor - Modulo divisor
+ * @return {Number}
+ */
 const modulo = (value, divisor) => {
     const remainder = value % divisor;
     return !value || Math.sign(value) === Math.sign(divisor) ? remainder : remainder + divisor;
 };
 
-let seed = 1337;
-const random = (max = 1) => modulo(sin(seed++), max);
+// TODO: Allow user defined seed and seed export
+const seed = 1337;
+/**
+ * Seeded random
+ * @param {Number} max - Upper limit of the random ([0, max[)
+ * @return {Number}
+ */
+const random = (
+    // eslint-disable-next-line no-param-reassign
+    s => (max = 1) => modulo(sin(++s), max)
+)(seed);
 
+/**
+ * Select a random item in an array
+ * @param {Array} array - Any array
+ * @return {*}
+ */
 const pick = array => array[floor(random() * array.length)];
 
+/**
+ * Select an item in an array while taking drop rate into account
+ * @param {Array} array - Any array of items with a "dropRate" property
+ * @return {*}
+ */
 const select = (array) => {
-    array.sort(({ dropRate: a }, { dropRate: b }) => b - a);
+    // Keep only item with dropRate and sort them higher to lower
+    const possibilities = array
+        .filter(({ dropRate }) => dropRate > 0)
+        .sort(({ dropRate: a }, { dropRate: b }) => b - a);
+    // Compute sum of drop rates
     const dropRateScale = [];
-    const dropRateSum = array.reduce((acc, { dropRate = 0 }) => {
-        dropRateScale.push(acc);
-        return acc + dropRate;
+    const dropRateSum = possibilities.reduce((acc, { dropRate = 0 }) => {
+        const sum = acc + dropRate;
+        dropRateScale.push(sum);
+        return sum;
     }, 0);
     const selected = random(dropRateSum);
-    const index = dropRateScale.findIndex(value => value > selected);
-    return array[index];
+    const index = dropRateScale.findIndex(value => selected < value);
+    return possibilities[index];
+};
+
+/**
+ * Select multiple item in an array taking drop rate into account
+ * @param {Number} max - Total maximum of item
+ * @param {Array} array - Array of items with a "dropRate" property
+ */
+const selectMultiple = (max, array) => {
+
 };
 
 export {
@@ -27,4 +66,5 @@ export {
     random,
     pick,
     select,
+    selectMultiple,
 };

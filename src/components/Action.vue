@@ -167,6 +167,10 @@
                 box-shadow: 1px 1px 1px rgba(0, 0, 0, .5);
             }
 
+            &:focus {
+                outline: 1px solid #fff;
+            }
+
             &.running {
                 color: #999;
                 box-shadow: none;
