@@ -15,12 +15,12 @@ const modulo = (value, divisor) => {
 const seed = 1337;
 /**
  * Seeded random
- * @param {Number} max - Upper limit of the random ([0, max[)
+ * @param {Array} range - Limits of the random ([min, max[)
  * @return {Number}
  */
 const random = (
     // eslint-disable-next-line no-param-reassign
-    s => (max = 1) => modulo(sin(++s), max)
+    s => ([min = 0, max = 1] = []) => modulo(sin(++s), (max - min)) + min
 )(seed);
 
 /**
@@ -47,17 +47,17 @@ const select = (array) => {
         dropRateScale.push(sum);
         return sum;
     }, 0);
-    const selected = random(dropRateSum);
+    const selected = random([0, dropRateSum]);
     const index = dropRateScale.findIndex(value => selected < value);
     return possibilities[index];
 };
 
 /**
  * Select multiple item in an array taking drop rate into account
- * @param {Number} max - Total maximum of item
+ * @param {Array} max - Total maximum of item
  * @param {Array} array - Array of items with a "dropRate" property
  */
-const selectMultiple = (max, array) => {
+const selectMultiple = ([min = 0, max = 1], array) => {
 
 };
 

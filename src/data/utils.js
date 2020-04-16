@@ -1,5 +1,8 @@
-const time = x => x * (1000 / 60);
+const hours = x => x * 1000;
+
+const days = x => x * hours(24);
 
 export {
-    time,
+    hours,
+    days,
 };

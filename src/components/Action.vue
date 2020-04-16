@@ -1,14 +1,12 @@
 <template>
     <div
         class="action-wrapper"
-        @mouseover="showOptions = state.running || true"
-        @mouseleave="showOptions = false"
     >
         <button
             class="action"
             :class="state"
             :style="style"
-            @click="start"
+            @click="start()"
             v-tooltip="this"
         >
             <span class="name">{{ data.name }}</span>
@@ -16,10 +14,9 @@
         <div
             class="options"
             v-if="state.multiple"
-            v-show="showOptions"
         >
             <Action
-                v-for="sub in data.choices" :key="sub.name"
+                v-for="sub in choices" :key="sub.key"
                 :data="sub"
             />
         </div>
@@ -29,23 +26,19 @@
 <script>
     import tooltip from "../tooltip-directive";
     import { wait, cancel } from "../timer";
-    import { actions } from "../data";
 
     export default {
         name: "Action",
+        props: ["data"],
         directives: {
             tooltip,
         },
         data () {
             return {
                 isRunning: false,
-                showOptions: false,
             };
         },
         computed: {
-            data () {
-                return actions[this.$vnode.key];
-            },
             style () {
                 return {
                     animationDuration: `${this.data.time}ms`,
@@ -58,64 +51,91 @@
                     disabled: this.isDisabled(),
                 };
             },
+            choices () {
+                return this.data.choices(this).sort(({ order: a }, { order: b }) => a - b);
+            },
+            person () {
+                if (this.$parent.data.health !== undefined) {
+                    return this.$parent;
+                }
+                return this.$parent.person;
+            },
+            energy () {
+                if (this.$parent.data.health !== undefined) {
+                    return this.data.energy || 0;
+                }
+                return (this.data.energy || 0) + this.$parent.energy;
+            },
+            time () {
+                if (this.$parent.data.health !== undefined) {
+                    return this.data.time || 0;
+                }
+                return (this.data.time || 0) + this.$parent.time;
+            }
         },
         methods: {
-            start () {
-                if (this.state.disabled) {
+            start (choice) {
+                if (this.state.disabled || (this.state.multiple && !choice)) {
                     return;
                 }
 
-                const consume = this.data.needs && this.data.needs(this);
-                if (consume) {
-                    consume.forEach(([amount, resource]) => this.$store.dispatch("resource/consume", {
-                        resource,
-                        amount,
-                    }));
+                if (this.$parent.start) {
+                    return this.$parent.start(this.data);
                 }
 
-                this.$emit("start", this.data);
-                if (this.data.time) {
-                    this.isRunning = wait(this.end, this.data.time);
+                const need = (this.data.need && this.data.need(this)) || [];
+                if (choice) {
+                    need.push(...((choice.need && choice.need(this)) || []));
+                }
+                need.forEach(([amount, resource]) => this.$store.dispatch("resource/consume", {
+                    resource,
+                    amount,
+                }));
+
+                this.$emit("start", this, choice);
+                if (this.time) {
+                    this.isRunning = wait(this.end.bind(this, choice), this.time);
                 }
                 else {
-                    this.end();
+                    this.end(choice);
                 }
             },
-            end () {
-                const earn = this.data.effect && this.data.effect(this);
-                if (earn) {
-                    earn.forEach(([amount, resource]) => this.$store.dispatch("resource/add", {
-                        resource,
-                        amount,
-                    }));
+            end (choice) {
+                const earn = (this.data.effect && this.data.effect(this, choice)) || [];
+                if (choice) {
+                    earn.push(...((choice.effect && choice.effect(this, choice)) || []));
                 }
+                earn.forEach(([amount, resource]) => this.$store.dispatch("resource/add", {
+                    resource,
+                    amount,
+                }));
 
-                const build = this.data.build && this.data.build(this);
-                if (build) {
-                    build.forEach(building => this.$store.dispatch("building/add", {
-                        building,
-                    }));
+                const build = this.data.build && this.data.build(this) || [];
+                if (choice) {
+                    build.push(...((choice.build && choice.build(this)) || []));
                 }
+                build.forEach(building => this.$store.dispatch("building/add", {
+                    building,
+                }));
 
                 this.$emit("end", this.data);
                 this.isRunning = false;
             },
             isDisabled () {
                 // The person is already doing something
-                if (this.$parent.isBusy) {
+                if (this.person.isBusy) {
                     return true;
                 }
 
                 // The person don't have enough energy
-                const { energy, needs } = this.data;
-                if (energy && energy > this.$parent.data.energy) {
+                if (this.energy > this.person.data.energy) {
                     return true;
                 }
 
                 // Need don't match
-                if (needs) {
-                    return Boolean(needs(this).find(([amount, data]) => {
-                        const has = this.$store.getters["resource/howMuch"](data);
+                if (this.data.need) {
+                    return Boolean(this.data.need(this).find(([amount, key]) => {
+                        const has = this.$store.getters["resource/howMuch"](key);
                         return has < amount;
                     }));
                 }
@@ -171,11 +191,25 @@
                 outline: 1px solid #fff;
             }
 
+            &.disabled {
+                cursor: initial;
+
+                &:before {
+                    content: "";
+                    position: absolute;
+                    width: 100%;
+                    height: 100%;
+                    top: 0;
+                    left: 0;
+                    background-color: rgba(0, 0, 0, .5);
+                }
+            }
+
             &.running {
                 color: #999;
                 box-shadow: none;
 
-                &:after {
+                &:before {
                     content: "";
                     position: absolute;
                     height: 100%;
@@ -196,23 +230,10 @@
                     }
                 }
             }
-
-            &.disabled {
-                cursor: initial;
-
-                &:before {
-                    content: "";
-                    position: absolute;
-                    width: 100%;
-                    height: 100%;
-                    top: 0;
-                    left: 0;
-                    background-color: rgba(0, 0, 0, .5);
-                }
-            }
         }
 
         .options {
+            display: none;
             position: absolute;
             top: 100%;
 
@@ -224,6 +245,10 @@
                     width: 100%;
                 }
             }
+        }
+
+        &:hover .options, &:focus-within .options {
+            display: block;
         }
     }
 

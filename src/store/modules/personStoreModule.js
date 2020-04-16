@@ -1,9 +1,12 @@
 import { commonGetters, commonMutations, mutations } from "./commons";
+import { actions as actionsData } from "../../data";
 
 export default {
     namespaced: true,
     state: {
-        list: [],
+        list: [
+            // {  name: "", health: n, energy: n, actions: [] }
+        ],
     },
     getters: {
         ...commonGetters,
@@ -18,7 +21,9 @@ export default {
             list[index].health = Math.min(value, 1);
         },
         pushAction ({ list }, { index, action }) {
-            list[index].actions.push(action);
+            const { actions } = list[index];
+            actions.push(action);
+            actions.sort((a, b) => actionsData[a].order - actionsData[b].order);
         },
         removeAction ({ list }, { index, actionIndex }) {
             list[index].actions.splice(actionIndex, 1);

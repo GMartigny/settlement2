@@ -1,4 +1,20 @@
 import { commonGetters, commonMutations, mutations } from "./commons";
+import { buildings } from "../../data";
+
+const isBuildingDone = list => (key) => {
+    if (list.includes(key)) {
+        return true;
+    }
+
+    return list.some((built) => {
+        const { upgrade } = buildings[built];
+        if (upgrade) {
+            const upgraded = upgrade();
+            return isBuildingDone(upgraded)(key);
+        }
+        return false;
+    });
+};
 
 export default {
     namespaced: true,
@@ -7,6 +23,7 @@ export default {
     },
     getters: {
         ...commonGetters,
+        done: ({ list }) => isBuildingDone(list),
     },
     mutations: {
         ...commonMutations,
@@ -17,7 +34,9 @@ export default {
                 item: building,
             });
 
-            const unlock = building.unlock && building.unlock();
+            const data = buildings[building];
+
+            const unlock = data.unlock && data.unlock();
             if (unlock) {
                 unlock.forEach(action => dispatch("action/add", {
                     action,
@@ -26,7 +45,7 @@ export default {
                 }));
             }
 
-            const upgrade = building.upgrade && building.upgrade();
+            const upgrade = data.upgrade && data.upgrade();
             if (upgrade) {
                 upgrade.forEach((removed) => {
                     const index = getters.indexOf(removed);

@@ -8,7 +8,8 @@
             </div>
             <div>
                 <Action
-                    v-for="action in data.actions" :key="action"
+                    v-for="key in data.actions" :key="key"
+                    :data="actions[key]"
                     @start="startAction"
                     @end="endAction"
                     ref="actions"
@@ -21,7 +22,7 @@
 <script>
     import Action from "./Action.vue";
     import Bar from "./Bar.vue";
-    import { specials } from "../data";
+    import { specials, actions } from "../data";
 
     export default {
         name: "Person",
@@ -30,6 +31,7 @@
             return {
                 specials,
                 isBusy: false,
+                actions,
             };
         },
         components: {
@@ -45,11 +47,9 @@
                     }
                 }
             },
-            startAction ({ name, energy }) {
-                if (energy) {
-                    this.updateEnergy(-energy);
-                }
-                this.isBusy = name;
+            startAction ({ data, energy }) {
+                this.updateEnergy(-energy);
+                this.isBusy = data;
             },
             endAction ({ unlock, lock }) {
                 this.isBusy = false;
@@ -71,16 +71,20 @@
                 }
             },
             updateEnergy (amount) {
-                this.$store.dispatch("person/updateEnergy", {
-                    person: this.data,
-                    amount,
-                });
+                if (amount) {
+                    this.$store.dispatch("person/updateEnergy", {
+                        person: this.data,
+                        amount,
+                    });
+                }
             },
             updateHealth (amount) {
-                this.$store.dispatch("person/updateHealth", {
-                    person: this.data,
-                    amount,
-                });
+                if (amount) {
+                    this.$store.dispatch("person/updateHealth", {
+                        person: this.data,
+                        amount,
+                    });
+                }
             },
         },
     };

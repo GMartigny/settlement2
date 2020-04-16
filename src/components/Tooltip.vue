@@ -10,17 +10,17 @@
         </p>
         <ul
             class="needs"
-            v-show="needs"
+            v-show="need"
         >
             <li
-                v-for="([amount, data]) in needs"
+                v-for="([amount, key]) in need"
                 class="resource"
-                :class="{ hasEnough: hasEnough(amount, data) }"
+                :class="{ hasEnough: hasEnough(amount, key) }"
             >
-                <span v-if="!hasEnough(amount, data)">
-                    {{ $store.getters["resource/howMuch"](data) }} /
+                <span v-if="!hasEnough(amount, key)">
+                    {{ $store.getters["resource/howMuch"](key) }} /
                 </span>{{ amount }}
-                {{ data.name }}
+                {{ resources[key].name }}
             </li>
         </ul>
         <div class="time">
@@ -32,19 +32,25 @@
 <script>
     import { mapState } from "vuex";
     import pretty from "pretty-ms";
+    import { resources } from "../data";
 
     export default {
         name: "Tooltip",
+        data () {
+            return {
+                resources,
+            };
+        },
         computed: {
             ...mapState("tooltip", ["shown", "data", "position"]),
             name () {
                 return this.data && this.data.name;
             },
             description () {
-                return this.data && this.data.description;
+                return this.data && this.data.desc;
             },
-            needs () {
-                return this.data && this.data.needs && this.data.needs();
+            need () {
+                return this.data && this.data.need && this.data.need();
             },
             time () {
                 return this.data && this.data.time && pretty(this.data.time, {
@@ -52,12 +58,17 @@
                 });
             },
             style () {
-                const margin = 10;
-                const left = this.position && (this.position.x + margin);
-                const top = this.position && (this.position.y + margin);
-                return {
-                    transform: `translate3d(${left}px, ${top}px, 0)`,
-                };
+                if (this.shown) {
+                    const { width, height } = this.$el.getBoundingClientRect();
+                    const maxLeft = window.innerWidth - width;
+                    const maxTop = window.innerHeight - height;
+                    const margin = 10;
+                    const left = this.position && (this.position.x + margin);
+                    const top = this.position && (this.position.y + margin);
+                    return {
+                        transform: `translate3d(${Math.min(left, maxLeft)}px, ${Math.min(top, maxTop)}px, 0)`,
+                    };
+                }
             },
         },
         methods: {

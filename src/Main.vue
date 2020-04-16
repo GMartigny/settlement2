@@ -3,7 +3,7 @@
         <transition name="slide-down">
             <div class="resources" v-show="Object.keys(resources).length">
                 <Resources
-                    v-for="(amount, resource) in resources" :key="resource"
+                    v-for="([amount, resource]) in resources" :key="resource"
                     :amount="amount"
                 />
             </div>
@@ -21,7 +21,7 @@
         >
             Clear save
         </button>
-        <Tooltip ref="tooltip" />
+        <Tooltip />
     </main>
 </template>
 
@@ -78,8 +78,8 @@
             },
             updateResources (tick) {
                 // Persons resource consumption
-                const needs = specials.person.needs();
-                needs.forEach(([amount, resource]) => {
+                const need = specials.person.need();
+                need.forEach(([amount, resource]) => {
                     // Runs out, hit person's energy instead
                     if (this.$store.getters["resource/howMuch"](resource) === 0) {
                         this.$refs.persons.forEach((person) => {
@@ -99,7 +99,7 @@
                 const { energyDegradation } = specials.person;
                 if (this.$refs.persons.length) {
                     this.$refs.persons.forEach((person) => {
-                        if (person.isBusy !== actions.sleep.name) {
+                        if (person.isBusy.name !== actions.sleep.name) {
                             person.updateEnergy(-energyDegradation * tick);
                         }
                     });
@@ -131,7 +131,7 @@
 
             if (!this.persons.length) {
                 this.$store.dispatch("building/add", {
-                    building: buildings.wreckage,
+                    building: buildings.wreckage.key,
                 });
                 wait(() => {
                     this.$store.dispatch("person/add", {

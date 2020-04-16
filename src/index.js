@@ -18,3 +18,11 @@ const app = new Vue({
     },
 });
 app.$mount(container);
+
+const message = `
+|----------------|
+|     Hello      |
+|     World      |
+|----------------|
+`;
+console.log(message.slice(1));
