@@ -36,26 +36,30 @@ export default {
 
             const data = buildings[building];
 
-            const unlock = data.unlock && data.unlock();
-            if (unlock) {
-                unlock.forEach(action => dispatch("action/add", {
-                    action,
-                }, {
-                    root: true,
-                }));
-            }
+            const unlock = (data.unlock && data.unlock()) || [];
+            unlock.forEach(action => dispatch("action/add", {
+                action,
+            }, {
+                root: true,
+            }));
 
-            const upgrade = data.upgrade && data.upgrade();
-            if (upgrade) {
-                upgrade.forEach((removed) => {
-                    const index = getters.indexOf(removed);
-                    if (index >= 0) {
-                        commit(mutations.remove, {
-                            index,
-                        });
-                    }
-                });
-            }
+            const upgrade = (data.upgrade && data.upgrade()) || [];
+            upgrade.forEach((removed) => {
+                const index = getters.indexOf(removed);
+                if (index >= 0) {
+                    commit(mutations.remove, {
+                        index,
+                    });
+                }
+            });
+
+            const effect = (data.effect && data.effect()) || [];
+            effect.forEach(([amount, resource]) => dispatch("resource/add", {
+                amount,
+                resource,
+            }, {
+                root: true,
+            }));
         },
     },
 };
